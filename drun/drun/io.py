@@ -383,7 +383,7 @@ def export_tf(filename, session, prepare_func, inputs, outputs,
     :type legacy_init_op: None or :py:class:`tf.Operation`
     :param version: of version
     :type version: str
-    :return::py:class:`drun.model.TensorFlowModel` -- model instance
+    :return: :py:class:`drun.model.TensorFlowModel` -- model instance
     """
     column_types = _build_column_types_from_arguments(param_types, input_data_frame)
 
