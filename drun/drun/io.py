@@ -23,14 +23,15 @@ import json
 
 import drun
 import drun.env
-from drun.model import ScipyModel, IMLModel
+from drun.model import ScipyModel, IMLModel, TensorFlowModel
 import drun.types
 from drun.types import deduct_types_on_pandas_df
 from drun.types import ColumnInformation
-from drun.utils import TemporaryFolder
+from drun.utils import TemporaryFolder, make_archive, extract_archive
 
 import dill
 from pandas import DataFrame
+import tensorflow as tf
 
 
 def _get_column_types(param_types):
@@ -68,7 +69,7 @@ class ModelContainer:
     ZIP_FILE_MODEL = 'model'
     ZIP_FILE_INFO = 'info.json'
 
-    def __init__(self, file, is_write=False, do_not_load_model=False):
+    def __init__(self, file, is_write=False, do_not_load_model=False, target_path=None):
         """
         Create model container (archive) from existing (when is_write=False) or from empty (when is_write=True)
 
@@ -78,36 +79,56 @@ class ModelContainer:
         :type is_write: bool
         :param do_not_load_model: load only meta information
         :type do_not_load_model: bool
+        :param target_path: path to folder for extracting
+        :type target_path: str
         """
         self._file = file
         self._is_saved = not is_write
         self._do_not_load_model = do_not_load_model
+        self._target_path = target_path
         self._model = None
         self._properties = {}
 
         if self._is_saved:
-            self._load()
+            self._load(self._target_path)
 
-    def _load(self):
+    def _load_from_folder(self, path):
+        """
+        Load from folder
+
+        :param path: path to folder
+        :type path: str
+        :return: None
+        """
+        model_path = os.path.join(path, self.ZIP_FILE_MODEL)
+        if not self._do_not_load_model:
+            with open(model_path, 'rb') as file:
+                self._model = dill.load(file)
+
+            self._model.load_from_archive(path)
+
+        info_path = os.path.join(path, self.ZIP_FILE_INFO)
+        with open(info_path, 'r') as file:
+            self._load_info(file)
+
+    def _load(self, target_folder=None):
         """
         Load from file
 
+        :argument target_folder: target folder for unpack
+        :type target_folder: str
         :return: None
         """
         if not os.path.exists(self._file):
             raise Exception('File not existed: %s' % (self._file, ))
 
-        with TemporaryFolder('drun-model-save') as temp_directory:
-            with zipfile.ZipFile(self._file, 'r') as zip:
-                model_path = zip.extract(self.ZIP_FILE_MODEL, os.path.join(temp_directory.path, self.ZIP_FILE_MODEL))
-                info_path = zip.extract(self.ZIP_FILE_INFO, os.path.join(temp_directory.path, self.ZIP_FILE_INFO))
-
-            if not self._do_not_load_model:
-                with open(model_path, 'rb') as file:
-                    self._model = dill.load(file)
-
-            with open(info_path, 'r') as file:
-                self._load_info(file)
+        if target_folder:
+            extract_archive(self._file, target_folder)
+            self._load_from_folder(target_folder)
+        else:
+            with TemporaryFolder('drun-model-save') as temp_directory:
+                extract_archive(self._file, temp_directory)
+                self._load_from_folder(temp_directory)
 
     def _load_info(self, file):
         """
@@ -135,6 +156,7 @@ class ModelContainer:
 
         :return: None
         """
+        self['model.type'] = self._model.__class__.__name__
         self['model.version'] = self._model.version
         self['drun.version'] = drun.__version__
 
@@ -175,12 +197,13 @@ class ModelContainer:
         with TemporaryFolder('drun-model-save') as temp_directory:
             with open(os.path.join(temp_directory.path, self.ZIP_FILE_MODEL), 'wb') as file:
                 dill.dump(model_instance, file, recurse=True)
+
+            model_instance.save_to_archive(temp_directory.path)
+
             with open(os.path.join(temp_directory.path, self.ZIP_FILE_INFO), 'wt') as file:
                 self._write_info(file)
 
-            with zipfile.ZipFile(self._file, 'w', self.ZIP_COMPRESSION) as zip:
-                zip.write(os.path.join(temp_directory.path, self.ZIP_FILE_MODEL), self.ZIP_FILE_MODEL)
-                zip.write(os.path.join(temp_directory.path, self.ZIP_FILE_INFO), self.ZIP_FILE_INFO)
+            make_archive(temp_directory.path, self._file)
 
     def __enter__(self):
         """
@@ -190,11 +213,11 @@ class ModelContainer:
         """
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exit_type, value, traceback):
         """
         Call remove on context exit
 
-        :param type: -
+        :param exit_type: -
         :param value: -
         :param traceback: -
         :return: None
@@ -332,8 +355,105 @@ def deduce_param_types(data_frame, optional_dictionary=None):
     """
     if optional_dictionary:
         return _get_column_types((data_frame, optional_dictionary))
-    else:
-        return _get_column_types(data_frame)
+
+    return _get_column_types(data_frame)
+
+
+def export_tf(filename, session, prepare_func, inputs, outputs,
+              param_types=None, input_data_frame=None,
+              legacy_init_op=None, version=None):
+    """
+    Export TensorFlow model
+
+    :param filename: the location to write down the model
+    :type filename: str
+    :param session: TF session (for catching variables)
+    :type session: :py:class:`tf.Session`
+    :param prepare_func: a function to prepare input DF->DF
+    :type prepare_func: func(x) -> y
+    :param inputs: map of tensors with names for input data
+    :type inputs: dict[str, :py:class:`tf.Tensor`]
+    :param outputs: map of tensors with names for output data
+    :type outputs: dict[str, :py:class:`tf.Tensor`]
+    :param param_types: result of deduce_param_types
+    :type param_types: dict[str, :py:class:`drun.types.ColumnInformation`]
+    :param input_data_frame: pandas DF
+    :type input_data_frame: :py:class:`pandas.DataFrame`
+    :param legacy_init_op: initial operation or None for default (tables_initializer)
+    :type legacy_init_op: None or :py:class:`tf.Operation`
+    :param version: of version
+    :type version: str
+    :return::py:class:`drun.model.TensorFlowModel` -- model instance
+    """
+    column_types = _build_column_types_from_arguments(param_types, input_data_frame)
+
+    with TemporaryFolder('tensorflow_builder') as temp_directory:
+        sub_path = os.path.join(temp_directory.path, '1')
+        builder = tf.saved_model.builder.SavedModelBuilder(sub_path)
+
+        inputs_prepared = {k: tf.saved_model.utils.build_tensor_info(v) for (k, v) in inputs.items()}
+        outputs_prepared = {k: tf.saved_model.utils.build_tensor_info(v) for (k, v) in outputs.items()}
+
+        if not legacy_init_op:
+            legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
+
+        signature = (
+            tf.saved_model.signature_def_utils.build_signature_def(
+                inputs=inputs_prepared,
+                outputs=outputs_prepared,
+                method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME)
+        )
+
+        builder.add_meta_graph_and_variables(
+            session, [tf.saved_model.tag_constants.SERVING],
+            signature_def_map={
+                tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature,
+            },
+            clear_devices=True,
+            legacy_init_op=legacy_init_op
+        )
+
+        builder.save()
+
+        model = TensorFlowModel(prepare_func=prepare_func,
+                                column_types=column_types,
+                                version=version)
+
+        model.add_tensorflow_model(sub_path)
+
+        with ModelContainer(filename, is_write=True) as container:
+            container.save(model)
+
+
+def _build_column_types_from_arguments(param_types=None, input_data_frame=None):
+    """
+    Build information about columns
+
+    :param param_types: result of deduce_param_types
+    :type param_types: dict[str, :py:class:`drun.types.ColumnInformation`]
+    :param input_data_frame: pandas DF
+    :type input_data_frame: :py:class:`pandas.DataFrame`
+    :return: dict[str, :py:class:`drun.types.ColumnInformation`] -- dict of column name => type
+    """
+    column_types = None
+
+    if param_types is not None and input_data_frame is not None:
+        raise Exception('You cannot provide param_types and input_data_frame in one time')
+
+    if param_types is None and input_data_frame is None:
+        raise Exception('You should provide param_types or input_data_frame')
+
+    if param_types is not None:
+        column_types = param_types
+    elif input_data_frame is not None:
+        column_types = _get_column_types(input_data_frame)
+
+    if not isinstance(column_types, dict) \
+            or len(column_types.keys()) == 0 \
+            or not isinstance(list(column_types.values())[0], ColumnInformation):
+        raise Exception('Bad param_types / input_data_frame provided')
+
+    return column_types
 
 
 def export(filename, apply_func, prepare_func=None, param_types=None, input_data_frame=None, version=None):
@@ -363,23 +483,7 @@ def export(filename, apply_func, prepare_func=None, param_types=None, input_data
             """
             return input_dict
 
-    column_types = None
-
-    if param_types is not None and input_data_frame is not None:
-        raise Exception('You cannot provide param_types and input_data_frame in one time')
-
-    if param_types is None and input_data_frame is None:
-        raise Exception('You should provide param_types or input_data_frame')
-
-    if param_types is not None:
-        column_types = param_types
-    elif input_data_frame is not None:
-        column_types = _get_column_types(input_data_frame)
-
-    if not isinstance(column_types, dict) \
-            or not len(column_types.keys()) \
-            or not isinstance(list(column_types.values())[0], ColumnInformation):
-        raise Exception('Bad param_types / input_data_frame provided')
+    column_types = _build_column_types_from_arguments(param_types, input_data_frame)
 
     model = ScipyModel(apply_func=apply_func,
                        column_types=column_types,

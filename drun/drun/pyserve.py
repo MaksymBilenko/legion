@@ -141,10 +141,17 @@ def init_model(app):
     :return: model instance
     """
     if 'MODEL_FILE' in app.config:
+        folder = utils.TemporaryFolder('model_temp_path')
+        app.config['MODEL_TEMP_FOLDER'] = folder
+
         file = app.config['MODEL_FILE']
         LOGGER.info("Loading model from %s", file)
-        with drun.io.ModelContainer(file) as container:
+
+        with drun.io.ModelContainer(file, target_path=folder.path) as container:
             model = container.model
+
+        model.startup(folder.path)
+
     else:
         LOGGER.info("Instantiated dummy model")
         model = mlmodel.DummyModel()
@@ -232,6 +239,30 @@ def init_application(args):
     return app
 
 
+def shutdown_application(app, args):
+    """
+    Make shutdown logic
+
+    :param app: Flask app instance
+    :type app: :py:class:`Flask.app`
+    :param args: arguments
+    :type args: :py:class:`argparse.Namespace`
+    :return: None
+    """
+    try:
+        model = app.config['model']
+        temp_folder = app.config.get('MODEL_TEMP_FOLDER')
+
+        if model and temp_folder:
+            model.shutdown(temp_folder.path)
+
+        if temp_folder:
+            temp_folder.remove()
+
+    except Exception as shutdown_exception:
+        logging.exception(shutdown_exception)
+
+
 def serve_model(args):
     """
     Serve models
@@ -241,12 +272,19 @@ def serve_model(args):
     :type args: :py:class:`argparse.Namespace`
     :return: None
     """
-    logging.info("legion pyserve initializing")
-    app = init_application(args)
+    application = None
 
-    register_service(app)
-    logging.info("consensus achieved")
+    try:
+        logging.info("legion pyserve initializing")
+        application = init_application(args)
 
-    app.run(host=app.config['LEGION_ADDR'],
-            port=app.config['LEGION_PORT'],
-            use_reloader=False)
+        register_service(application)
+        logging.info("consensus achieved")
+
+        application.run(host=application.config['LEGION_ADDR'],
+                        port=application.config['LEGION_PORT'],
+                        use_reloader=False)
+    except Exception as exception:
+        logging.exception(exception)
+    finally:
+        shutdown_application(application, args)
