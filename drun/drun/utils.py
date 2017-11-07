@@ -20,6 +20,7 @@ DRun utils functional
 import socket
 import tempfile
 import os
+import shutil
 
 
 def detect_ip():
@@ -44,6 +45,33 @@ def escape(unescaped_string):
     :return: str -- escaped string
     """
     return unescaped_string.replace('.', '-').replace(':', '-').replace('&', '-')
+
+
+def make_archive(source_folder, zip_file):
+    """
+    Make ZIP archive from folder
+
+    :param source_folder: path to source folder
+    :type source_folder: str
+    :param zip_file: path to target zip file
+    :type zip_file: str
+    :return: None
+    """
+    filename = shutil.make_archive(zip_file, 'zip', source_folder)
+    shutil.move(filename, zip_file)
+
+
+def extract_archive(zip_file, target_folder):
+    """
+    Unpack zip file to folder
+
+    :param zip_file: path source zip file
+    :type zip_file: str
+    :param target_folder: path to target folder
+    :type target_folder: str
+    :return: None
+    """
+    shutil.unpack_archive(zip_file, target_folder, 'zip')
 
 
 class TemporaryFolder:
