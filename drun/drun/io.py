@@ -127,8 +127,8 @@ class ModelContainer:
             self._load_from_folder(target_folder)
         else:
             with TemporaryFolder('drun-model-save') as temp_directory:
-                extract_archive(self._file, temp_directory)
-                self._load_from_folder(temp_directory)
+                extract_archive(self._file, temp_directory.path)
+                self._load_from_folder(temp_directory.path)
 
     def _load_info(self, file):
         """
