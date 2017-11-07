@@ -22,5 +22,6 @@ scipy
 tensorflow
 keras
 Pillow
+tensorflow_serving_client
 statsd
 locustio
