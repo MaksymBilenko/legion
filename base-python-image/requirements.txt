@@ -19,9 +19,10 @@ pydevd
 python-consul
 matplotlib
 scipy
-tensorflow
-keras
-Pillow
-tensorflow_serving_client
 statsd
 locustio
+Pillow
+protobuf==3.4.0
+bleach==1.5.0
+tensorflow==1.4.0
+tensorflow_serving_client==0.0.8
