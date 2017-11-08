@@ -9,5 +9,7 @@ numpy
 Pillow
 Jinja2>=2.9
 statsd
-tensorflow_serving_client
-tensorflow
+protobuf==3.4.0
+bleach==1.5.0
+tensorflow==1.4.0
+tensorflow_serving_client==0.0.8
