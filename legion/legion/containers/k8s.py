@@ -268,8 +268,6 @@ def deploy(cluster_config, cluster_secrets, namespace,
         grafana_client.create_dashboard_for_model(model_id, model_version)
 
     container_env_variables = {
-        legion.config.STATSD_HOST[0]: cluster_config['graphite']['domain'],
-        legion.config.STATSD_PORT[0]: str(cluster_config['graphite']['port']),
         legion.config.CONSUL_ADDR[0]: cluster_config['consul']['domain'],
         legion.config.CONSUL_PORT[0]: str(cluster_config['consul']['port']),
     }

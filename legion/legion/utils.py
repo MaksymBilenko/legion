@@ -312,6 +312,44 @@ def save_file(temp_file, target_file, remove_after_delete=False):
     return result_path
 
 
+def add_default_docker_registry(image, registry):
+    """
+    Add default docker registry if it not presents
+
+    :param image: image name. Examples: host:port/repository/image:tag, repository/image:tag, image:tag
+    :type image: str
+    :param registry: default registry if set. Examples: host:port/repository, host:port
+    :type registry: str or None
+    :return: str
+    """
+    if not registry:
+        return image
+
+    image_parts = list(filter(bool, image.split('/')))
+    image_parts_count = len(image_parts)
+
+    registry_parts = list(filter(bool, registry.split('/')))
+    registry_parts_count = len(registry_parts)
+
+    if image_parts_count > 3:
+        raise Exception('Invalid image format. Valid format: host:port/repository/image:tag')
+
+    if registry_parts_count > 2:
+        raise Exception('Invalid registry format. Valid format: host:port/repository')
+
+    if image_parts_count == 3:
+        return '/'.join(image_parts)
+
+    if image_parts_count == 2:
+        return '/'.join(registry_parts[0:1] + image_parts)
+
+    if image_parts_count == 1 and registry_parts_count == 2:
+        return '/'.join(registry_parts[0:2] + image_parts)
+
+    raise Exception('Unknown combination of image and registry names: {} and {}'
+                    .format(','.join(image_parts), ','.join(registry_parts)))
+
+
 def download_file(target_file):
     """
     Download file from external resource and return path to file on local machine

@@ -20,6 +20,7 @@ Flask app
 import logging
 
 import legion.config
+import legion.utils
 import legion.containers.k8s
 import legion.external.grafana
 import legion.http
@@ -90,6 +91,14 @@ def deploy(image, count=1, k8s_image=None):
     :return: bool -- True
     """
     register_on_grafana = app.config['REGISTER_ON_GRAFANA']
+
+    default_docker_registry = app.config['DEFAULT_DOCKER_REGISTRY']
+    if default_docker_registry:
+        image = legion.utils.add_default_docker_registry(image, default_docker_registry)
+
+        if k8s_image:
+            k8s_image = legion.utils.add_default_docker_registry(k8s_image, default_docker_registry)
+
     legion.containers.k8s.deploy(app.config['CLUSTER_STATE'], app.config['CLUSTER_SECRETS'],
                                  app.config['NAMESPACE'], app.config['DEPLOYMENT'], image, k8s_image, count,
                                  register_on_grafana)
