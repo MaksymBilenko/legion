@@ -94,9 +94,13 @@
         domain: "dashboard.{{ base_domain }}"
       when: install_only_chart == "no"
 
-    - name: Install legion chart
+#    - name: Install legion chart
+#      include_role:
+#        name: legion_chart
+
+    - name: Install airflow chart
       include_role:
-        name: legion_chart
+        name: airflow_chart
 
     - name: Debug output data
       include_role:

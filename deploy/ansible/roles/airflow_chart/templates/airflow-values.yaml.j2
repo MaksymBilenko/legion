@@ -1,0 +1,24 @@
+rootDomain: {{ base_domain }}
+namespace: default
+localDomain: "cluster.local"
+
+image: "nexus.local.epm.kharlamov.biz:443/legion/k8s-airflow:{{ base_version }}-{{ local_version }}"
+
+secrets:
+  postgres:
+    user: airflow
+    password: airflow
+    db: airflow
+
+  rabbitmq:
+    user: airflow
+    password: airflow
+    vhost: airflow
+
+  fernet_key: {{ secret_fernet_key }}
+  flask: {{ secret_flask }}
+
+ingress:
+  enabled: true
+  tls:
+    enabled: false
