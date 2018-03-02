@@ -89,6 +89,10 @@ mesos:
   default_principal: admin
   default_secret: admin
 
+storage:
+  accessMode: ReadWriteOnce
+  persistenceSize: 20Gi
+  storageClass: 'hostpath'
 
 ingress:
   enabled: true

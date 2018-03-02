@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
 CMD="airflow"
-TRY_LOOP="10"
-POSTGRES_HOST="postgres"
-POSTGRES_PORT="5432"
-RABBITMQ_HOST="rabbitmq"
-RABBITMQ_CREDS="airflow:airflow"
-FERNET_KEY=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY")
+TRY_LOOP=${TRY_LOOP:-"10"}
 
-# Generate Fernet key
-sed -i "s/{FERNET_KEY}/${FERNET_KEY}/" $AIRFLOW_HOME/airflow.cfg
+POSTGRES_HOST=${POSTGRES_HOST:-"postgres"}
+POSTGRES_PORT=${POSTGRES_PORT:-"5432"}
+
+RABBITMQ_HOST=${RABBITMQ_HOST:-"rabbitmq"}
+RABBITMQ_CREDS=${RABBITMQ_CREDS:-"airflow:airflow"}
+
+FERNET_KEY=$(python -c "")
+
 
 # wait for rabbitmq
 if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] || [ "$1" = "flower" ] ; then
