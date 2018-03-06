@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y \
  libmysqlclient-dev \
  sshpass \
  sudo \
+ redis-tools \
 
  && service cron stop \
 
@@ -45,7 +46,9 @@ RUN apt-get update && apt-get install -y \
  && pip install ibm_db \
  && pip install flask-bcrypt \
  && pip install 'sqlalchemy<1.2' \
- && pip install apache-airflow[postgres,jdbc,password,mysql,celery]==1.9.0 \
+ && pip install apache-airflow[postgres,jdbc,password,mysql,celery,redis]==1.9.0 \
+ && pip install redis \
+ && pip install hiredis \
  && rm -rf \
         /var/lib/apt/lists/* \
         /tmp/* \
@@ -56,6 +59,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY entrypoint.sh /home/airflow/init.sh
 
+RUN whereis redis-cli
 
 RUN chown -R airflow: ${AIRFLOW_HOME} && chmod -R 775 ${AIRFLOW_HOME}
 

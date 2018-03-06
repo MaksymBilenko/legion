@@ -6,11 +6,6 @@ secrets:
     password: airflow
     db: airflow
 
-  rabbitmq:
-    user: airflow
-    password: airflow
-    vhost: airflow
-
   fernet_key: fernet_key
   flask: flask
 
@@ -90,7 +85,7 @@ mesos:
   default_secret: admin
 
 storage:
-  accessMode: ReadWriteOnce
+  accessMode: ReadWriteMany
   persistenceSize: 20Gi
   storageClass: 'hostpath'
 

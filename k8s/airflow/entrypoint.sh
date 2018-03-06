@@ -6,23 +6,23 @@ TRY_LOOP=${TRY_LOOP:-"10"}
 POSTGRES_HOST=${POSTGRES_HOST:-"postgres"}
 POSTGRES_PORT=${POSTGRES_PORT:-"5432"}
 
-RABBITMQ_HOST=${RABBITMQ_HOST:-"rabbitmq"}
-RABBITMQ_CREDS=${RABBITMQ_CREDS:-"airflow:airflow"}
+REDIS_HOST=${REDIS_HOST:-"redis"}
+REDIS_CLI=${REDIS_CLI:-"/usr/bin/redis-cli"}
 
-FERNET_KEY=$(python -c "")
-
-
-# wait for rabbitmq
+# wait for redis
 if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] || [ "$1" = "flower" ] ; then
+  REDIS_CHECK="`$REDIS_CLI -h $REDIS_HOST ping`"
+  echo ${REDIS_CHECK}
   j=0
-  while ! curl -sI -u $RABBITMQ_CREDS http://$RABBITMQ_HOST:15672/api/whoami |grep '200 OK'; do
+  while [ "${X}" != "PONG" ]; do
     j=`expr $j + 1`
     if [ $j -ge $TRY_LOOP ]; then
-      echo "$(date) - $RABBITMQ_HOST still not reachable, giving up"
+      echo "$(date) - $REDIS_HOST still not reachable, giving up"
       exit 1
     fi
-    echo "$(date) - waiting for RabbitMQ... $j/$TRY_LOOP"
+    echo "$(date) - waiting for Redis... $j/$TRY_LOOP"
     sleep 5
+    X="`$REDIS_CLI -h $REDIS_HOST ping`"
   done
 fi
 
