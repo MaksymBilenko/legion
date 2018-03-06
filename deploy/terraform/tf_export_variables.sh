@@ -1,6 +1,7 @@
 #!/bin/sh
 export TF_VAR_AWS_INSTANCE_TYPE='t2.xlarge'
 export TF_VAR_INSTANCE_NAME='legion-ansible-demo-instance'
+export TF_VAR_ENV_NAME='alexs'
 export TF_VAR_AWS_REGION='us-east-2'
 export TF_VAR_AWS_SECURITY_GROUPS='epam-europe,default,epam-by-ru,epam-world'
 export TF_VAR_AWS_IMAGE='ami-10547475'
