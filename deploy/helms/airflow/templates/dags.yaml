@@ -59,7 +59,7 @@ data:
 
     if __name__ == "__main__":
         dag.cli()
-      
+
   example_with_param.py: |-
     # -*- coding: utf-8 -*-
     #

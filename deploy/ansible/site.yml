@@ -6,6 +6,7 @@
     base_version: "{{ lookup('env', 'BASE_VERSION') }}"
     local_version: "{{ lookup('env', 'LOCAL_VERSION') }}"
     install_only_chart: "{{ lookup('env', 'INSTALL_ONLY_CHART') }}"
+    airflow_secrets: "{{ lookup('file', lookup('env', 'AIRFLOW_SECRETS')) }}"
 
   pre_tasks:         
   - name: Wait 600 seconds for target connection to become reachable/usable
@@ -97,7 +98,6 @@
 #    - name: Install legion chart
 #      include_role:
 #        name: legion_chart
-
     - name: Install airflow chart
       include_role:
         name: airflow_chart

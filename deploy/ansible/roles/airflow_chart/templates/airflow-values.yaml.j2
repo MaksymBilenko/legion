@@ -18,6 +18,9 @@ secrets:
   fernet_key: {{ secret_fernet_key }}
   flask: {{ secret_flask }}
 
+connections:
+  {{ airflow_secrets|indent(2) }}
+
 ingress:
   enabled: true
   tls:

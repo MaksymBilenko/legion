@@ -127,12 +127,14 @@ node {
         }
         stage('Ansible'){
             if (params.USE_ANSIBLE){
-                sh """
-                ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
-                -u ${params.TF_VAR_SSH_USER} \
-                -e "ansible_ssh_user=${params.TF_VAR_SSH_USER}" \
-                --private-key "${params.TF_VAR_SSH_KEY}" -i "$ip," deploy/ansible/site.yml
-                """
+                withCredentials([file(credentialsId: 'secrets-airflow-connections-alpha', variable: 'AIRFLOW_SECRETS')]) {
+                    sh """
+                    ANSIBLE_HOST_KEY_CHECKING=False AIRFLOW_SECRETS="${env.AIRFLOW_SECRETS}" ansible-playbook \
+                    -u ${params.TF_VAR_SSH_USER} \
+                    -e "ansible_ssh_user=${params.TF_VAR_SSH_USER}" \
+                    --private-key "${params.TF_VAR_SSH_KEY}" -i "$ip," deploy/ansible/site.yml
+                    """
+                }
 
                 archiveArtifacts 'deploy/ansible/helm.debug'
                 archiveArtifacts 'deploy/ansible/helm.status'

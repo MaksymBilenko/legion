@@ -9,6 +9,28 @@ secrets:
   fernet_key: fernet_key
   flask: flask
 
+connections:
+  aurora:
+    enabled: false
+    conn_id: aurora_conn
+    host: ''
+    schema: ''
+    login: ''
+    password: ''
+    port: 3306
+
+  s3:
+    enabled: false
+    conn_id: s3_conn
+    extra: ''
+
+  salesforce:
+    enabled: false
+    conn_id: sf_conn
+    host: ''
+    login: ''
+    extra: ''
+
 core:
   remote_base_log_folder:
   remote_log_conn_id:
