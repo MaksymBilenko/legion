@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y \
  && pip install ibm_db \
  && pip install flask-bcrypt \
  && pip install 'sqlalchemy<1.2' \
- && pip install apache-airflow[postgres,jdbc,password,mysql,celery,redis]==1.9.0 \
+ && pip install apache-airflow[postgres,jdbc,password,mysql,celery,redis,s3]==1.9.0 \
  && pip install redis \
  && pip install hiredis \
  && rm -rf \
@@ -59,7 +59,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY entrypoint.sh /home/airflow/init.sh
 
-RUN whereis redis-cli
+COPY requirements.txt /home/airflow/requirements.txt
+RUN pip install -r /home/airflow/requirements.txt
 
 RUN chown -R airflow: ${AIRFLOW_HOME} && chmod -R 775 ${AIRFLOW_HOME}
 
