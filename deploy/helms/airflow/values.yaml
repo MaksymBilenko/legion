@@ -25,7 +25,7 @@ core:
   dags_are_paused_at_creation: false
 
   max_active_runs_per_dag: 16
-  load_examples: true
+  load_examples: false
   donot_pickle: false
   dagbag_import_timeout: 30
 
