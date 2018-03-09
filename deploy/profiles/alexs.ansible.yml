@@ -1,0 +1,27 @@
+route53_zone: epm.kharlamov.biz
+base_domain: k8s-alexs.epm.kharlamov.biz
+certificate_email: aliaksandr_semianets@epam.com
+git_key: "/home/jenkins/deploy.cert"
+cert_dir: "/etc/dynssl"
+use_https: "no"
+use_https_for_tests: "no"
+subdomains:
+  - dashboard
+  - nexus
+  - jupyter
+  - ldap
+  - jenkins
+  - edge
+  - consul
+  - grafana
+  - edi
+namespace: default
+deployment: legion
+test_base_domain: local.k8s-alexs.epm.kharlamov.biz
+service_account:
+  login:  admin
+  password: admin
+examples_to_test:
+  - Test-Summation
+  - Sklearn-Income
+  - Digit-Recognition
