@@ -25,7 +25,7 @@
     mode: 0644
 
 - name: Apply Dashboard configuration
-  shell: 'helm install stable/kubernetes-dashboard --namespace kube-system --name dash  -f ~/dashboard-values.yaml'
+  shell: 'helm install stable/kubernetes-dashboard --namespace kube-system --name dash --debug -f ~/dashboard-values.yaml'
 
 - name: Wait for Dashboard up
   shell: "kubectl get po --namespace kube-system | grep 'dashboard'"
