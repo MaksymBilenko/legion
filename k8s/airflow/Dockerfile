@@ -6,10 +6,10 @@ ENV AIRFLOW_HOME /home/airflow
 RUN apt-get update && apt-get install -y \
  wget \
  default-jdk \
- python2.7 \
+ python3.5 \
+ python3.5-dev \
  vim \
  cron \
- python-dev \
  libkrb5-dev \
  libsasl2-dev \
  libssl-dev \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
  build-essential \
  libblas-dev \
  liblapack-dev \
- python-pip \
+ python3-pip \
  apt-utils \
  curl \
  netcat \
@@ -28,27 +28,21 @@ RUN apt-get update && apt-get install -y \
  libmysqlclient-dev \
  sshpass \
  sudo \
- redis-tools \
+ redis-tools
 
- && service cron stop \
+RUN service cron stop \
+ && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow
 
- && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow \
- && pip install --upgrade pip \
- && pip install Cython \
- && pip install pytz==2015.7 \
- && pip install jinja2==2.8.1 \
- && pip install cryptography \
- && pip install pyOpenSSL \
- && pip install ndg-httpsclient \
- && pip install pyasn1 \
- && pip install psycopg2-binary \
- && pip install slackclient \
- && pip install ibm_db \
- && pip install flask-bcrypt \
- && pip install 'sqlalchemy<1.2' \
- && pip install apache-airflow[postgres,jdbc,password,mysql,celery,redis,s3]==1.9.0 \
- && pip install redis \
- && pip install hiredis \
+RUN pip3 install --upgrade pip \
+ && pip3 install Cython \
+ && pip3 install cryptography \
+ && pip3 install apache-airflow[postgres,jdbc,password,mysql,celery,redis,s3]==1.9.0 \
+ && pip3 install pyOpenSSL \
+ && pip3 install ndg-httpsclient \
+ && pip3 install pyasn1 \
+ && pip3 install psycopg2-binary \
+ && pip3 install redis \
+ && pip3 install hiredis \
  && rm -rf \
         /var/lib/apt/lists/* \
         /tmp/* \
