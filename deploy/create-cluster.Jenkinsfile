@@ -136,8 +136,8 @@ node {
                     """
                 }
 
-                archiveArtifacts 'deploy/ansible/helm.debug'
-                archiveArtifacts 'deploy/ansible/helm.status'
+                archiveArtifacts 'deploy/ansible/helm.airflow.debug'
+                archiveArtifacts 'deploy/ansible/helm.airflow.status'
 
                 // load variables
                 def map = [:]

@@ -31,11 +31,14 @@ spec:
           subPath: airflow.cfg
         - name: dag-volume
           mountPath: /home/airflow/dags
-        args: ["worker"]
+        args: ["airflow", "worker"]
       volumes:
       - name: airflow-config
-        configMap:
-          name: "{{ .Release.Name }}-config"
+        secret:
+          secretName: "{{ .Release.Name }}-config"
+          items:
+          - key: airflow.cfg
+            path: airflow.cfg
       - name: dag-volume
         persistentVolumeClaim:
           claimName: "{{ .Release.Name }}-dag-pvc"

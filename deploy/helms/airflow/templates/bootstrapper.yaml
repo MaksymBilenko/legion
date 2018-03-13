@@ -28,15 +28,22 @@ spec:
           mountPath: /home/airflow/dags
         - name: bootup-scripts
           mountPath: /opt/bootup
-        args: ["version", "&&", "bash", "/opt/bootup/add_connections.sh"]
+          subPath: add_connections.sh
+        args: ["bash", "/opt/bootup/add_connections.sh"]
       restartPolicy: Never
       volumes:
       - name: bootup-scripts
-        configMap:
-          name: "{{ .Release.Name }}-scripts"
+        secret:
+          secretName: "{{ .Release.Name }}-scripts"
+          items:
+          - key: add_connections.sh
+            path: add_connections.sh
       - name: airflow-config
-        configMap:
-          name: "{{ .Release.Name }}-config"
+        secret:
+          secretName: "{{ .Release.Name }}-config"
+          items:
+          - key: airflow.cfg
+            path: airflow.cfg
       - name: dag-volume
         persistentVolumeClaim:
           claimName: "{{ .Release.Name }}-dag-pvc"

@@ -10,7 +10,7 @@ REDIS_HOST=${REDIS_HOST:-"redis"}
 REDIS_CLI=${REDIS_CLI:-"/usr/bin/redis-cli"}
 
 # wait for redis
-if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] || [ "$1" = "flower" ] ; then
+if [ "$2" = "webserver" ] || [ "$2" = "worker" ] || [ "$2" = "scheduler" ] || [ "$2" = "flower" ] ; then
   REDIS_CHECK="`$REDIS_CLI -h $REDIS_HOST ping`"
   echo ${REDIS_CHECK}
   j=0
@@ -27,7 +27,7 @@ if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] || [ 
 fi
 
 # wait for DB
-if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] ; then
+if [ "$2" = "webserver" ] || [ "$2" = "worker" ] || [ "$2" = "scheduler" ] ; then
   i=0
   while ! nc $POSTGRES_HOST $POSTGRES_PORT >/dev/null 2>&1 < /dev/null; do
     i=`expr $i + 1`
@@ -38,11 +38,11 @@ if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] ; the
     echo "$(date) - waiting for ${POSTGRES_HOST}:${POSTGRES_PORT}... $i/$TRY_LOOP"
     sleep 5
   done
-  if [ "$1" = "webserver" ]; then
+  if [ "$2" = "webserver" ]; then
     echo "Initialize database..."
     $CMD initdb
   fi
   sleep 5
 fi
 
-exec $CMD "$@"
+exec "$@"
