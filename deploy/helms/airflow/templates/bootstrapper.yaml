@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-bootstrapper"
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: "{{ .Release.Name }}-bootstrapper"
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        image: "{{ .Values.image }}"
+        env:
+        - name: POSTGRES_HOST
+          value: "{{ .Release.Name }}-postgres"
+        - name: REDIS_HOST
+          value: "{{ .Release.Name }}-redis"
+        - name: AIRFLOW_HOME
+          value: "/home/airflow"
+        volumeMounts:
+        - name: airflow-config
+          mountPath: /home/airflow/airflow.cfg
+          subPath: airflow.cfg
+        - name: dag-volume
+          mountPath: /home/airflow/dags
+        - name: bootup-scripts
+          mountPath: /opt/bootup
+        args: ["version", "&&", "bash", "/opt/bootup/add_connections.sh"]
+      restartPolicy: Never
+      volumes:
+      - name: bootup-scripts
+        configMap:
+          name: "{{ .Release.Name }}-scripts"
+      - name: airflow-config
+        configMap:
+          name: "{{ .Release.Name }}-config"
+      - name: dag-volume
+        persistentVolumeClaim:
+          claimName: "{{ .Release.Name }}-dag-pvc"

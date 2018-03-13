@@ -1,0 +1,41 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ .Release.Name }}-scripts"
+data:
+  add_connections.sh: |-
+    echo "Adding connection information"
+    # Aurora
+    {{- if .Values.connections.aurora.enabled }}
+    airflow connections --add \
+    --conn_id {{ .Values.connections.aurora.conn_id }} \
+    --conn_type mysql \
+    --conn_host {{ .Values.connections.aurora.host }} \
+    --conn_schema {{ .Values.connections.aurora.schema }} \
+    --conn_login {{ .Values.connections.aurora.login }} \
+    --conn_port {{ .Values.connections.aurora.port }}
+    {{- else }}
+    # DISABLED
+    {{- end }}
+
+    # S3
+    {{- if .Values.connections.s3.enabled }}
+    airflow connections --add \
+    --conn_id {{ .Values.connections.s3.conn_id }} \
+    --conn_type s3 \
+    --conn_extra "{\"aws_secret_access_key\": \"{{ .Values.connections.s3.aws_secret_access_key }}\", \"aws_access_key_id\": \"{{ .Values.connections.s3.aws_access_key_id }}\", \"key_prefix\" : \"{{ .Values.connections.s3.key_prefix }}\"}"
+    {{- else }}
+    # DISABLED
+    {{- end }}
+
+    # Salesforce
+    {{- if .Values.connections.salesforce.enabled }}
+    airflow connections --add \
+    --conn_id {{ .Values.connections.salesforce.conn_id }} \
+    --conn_type http \
+    --conn_host {{ .Values.connections.salesforce.host }} \
+    --conn_login {{ .Values.connections.salesforce.login }} \
+    --conn_extra "{\"security_token\":\"{{ .Values.connections.salesforce.token }}\"}"
+    {{- else }}
+    # DISABLED
+    {{- end }}

@@ -16,20 +16,21 @@ connections:
     host: ''
     schema: ''
     login: ''
-    password: ''
     port: 3306
 
   s3:
     enabled: false
     conn_id: s3_conn
-    extra: ''
+    aws_secret_access_key: ''
+    aws_access_key_id: ''
+    key_prefix: ''
 
   salesforce:
     enabled: false
     conn_id: sf_conn
     host: ''
     login: ''
-    extra: ''
+    token: ''
 
 core:
   remote_base_log_folder:
