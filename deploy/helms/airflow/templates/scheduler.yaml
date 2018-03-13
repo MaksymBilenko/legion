@@ -31,7 +31,7 @@ spec:
           subPath: airflow.cfg
         - name: dag-volume
           mountPath: /home/airflow/dags
-        args: ["scheduler", "-n", "5"]
+        args: ["scheduler"]
       volumes:
       - name: airflow-config
         configMap:
